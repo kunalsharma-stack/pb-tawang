@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a2e1a">
+<title>PB Field Assessment · Tawang v2</title>
+<link rel="manifest" id="mf-link">
+<style>
+/* ── TOKENS ── */
+:root {
+  --bg:      #0f1a0f;
+  --surface: #1a2e1a;
+  --card:    #213021;
+  --border:  rgba(120,180,80,.18);
+  --accent:  #8bc34a;
+  --accent2: #ff8f00;
+  --text:    #e8f5e9;
+  --muted:   #7a9e7a;
+  --danger:  #ef5350;
+  --nav-h:   64px;
+  --hdr-h:   52px;
+  --sat-bot: env(safe-area-inset-bottom, 0px);
+  --sat-top: env(safe-area-inset-top, 0px);
+}
+
+/* ── RESET ── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{
+  height:100%;
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Trebuchet MS',Verdana,Geneva,sans-serif;
+  font-size:16px;
+  overscroll-behavior:none;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── GRAIN OVERLAY ── */
+body::before{
+  content:'';
+  position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+  opacity:.4;
+}
+
+/* ── LAYOUT ── */
+#hdr{
+  position:fixed;top:0;left:0;right:0;
+  height:calc(var(--hdr-h) + var(--sat-top));
+  padding-top:var(--sat-top);
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+  padding-left:16px;padding-right:16px;
+  gap:10px;z-index:100;
+}
+#nav{
+  position:fixed;bottom:0;left:0;right:0;
+  padding-bottom:var(--sat-bot);
+  background:var(--surface);
+  border-top:1px solid var(--border);
+  display:flex;z-index:100;
+  transition:transform .2s;
+}
+#content{
+  position:fixed;
+  top:calc(var(--hdr-h) + var(--sat-top));
+  bottom:calc(var(--nav-h) + var(--sat-bot));
+  left:0;right:0;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* ── HEADER ── */
+#hdr-title{
+  font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--accent);flex:1;
+}
+#hdr-sub{font-size:10px;color:var(--muted);letter-spacing:.08em;}
+#net-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;}
+#net-dot.off{background:var(--accent2);}
+
+/* ── NAV ── */
+.nb{
+  flex:1;background:none;border:none;
+  color:var(--muted);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;font-size:10px;letter-spacing:.05em;text-transform:uppercase;
+  padding:10px 2px;min-height:var(--nav-h);min-width:0;
+  font-family:inherit;
+  transition:color .15s;
+}
+.nb svg{width:20px;height:20px;flex-shrink:0;}
+.nb.on{color:var(--accent);}
+.nb span{font-size:9px;letter-spacing:.08em;}
+
+/* ── SCREENS ── */
+.scr{display:none;padding:16px 16px 20px;}
+.scr.on{display:block;}
+
+/* ── HOME SCREEN ── */
+.hero{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:20px;
+  margin-bottom:14px;
+  position:relative;
+  overflow:hidden;
+}
+.hero::after{
+  content:'';
+  position:absolute;top:-40px;right:-40px;
+  width:140px;height:140px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(139,195,74,.12) 0%, transparent 70%);
+  pointer-events:none;
+}
+.hero-label{
+  font-size:10px;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:8px;
+}
+.hero-title{
+  font-size:22px;font-weight:700;line-height:1.2;
+  color:var(--text);margin-bottom:6px;
+}
+.hero-sub{font-size:13px;color:var(--muted);line-height:1.6;}
+
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.stat{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:12px 8px;text-align:center;
+}
+.stat-n{font-size:26px;font-weight:700;color:var(--accent);line-height:1;}
+.stat-l{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:.06em;text-transform:uppercase;}
+
+.big-btn{
+  width:100%;padding:16px;
+  background:var(--accent);color:#0f1a0f;
+  border:none;border-radius:12px;
+  font-family:inherit;font-weight:700;font-size:17px;
+  cursor:pointer;margin-bottom:10px;
+  letter-spacing:.03em;
+  box-shadow:0 4px 20px rgba(139,195,74,.25);
+  transition:opacity .15s,transform .1s;
+}
+.big-btn:active{opacity:.85;transform:scale(.99);}
+.big-btn.sec{background:transparent;color:var(--accent);border:1.5px solid var(--border);box-shadow:none;font-size:15px;padding:13px;}
+
+.sec-lbl{
+  font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);margin:16px 0 8px;
+}
+.recent-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:12px 14px;margin-bottom:8px;cursor:pointer;
+  display:flex;align-items:center;gap:12px;
+  transition:background .15s;
+}
+.recent-card:active{background:var(--card);}
+.rc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.rc-info{flex:1;min-width:0;}
+.rc-loc{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rc-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+.rc-score{
+  font-size:13px;font-weight:700;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:8px;padding:4px 9px;
+  white-space:nowrap;
+}
+
+/* ── ASSESSMENT SCREEN ── */
+.assess-progress{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:14px;margin-bottom:12px;
+}
+.prog-label{
+  display:flex;justify-content:space-between;
+  font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;
+  margin-bottom:8px;
+}
+.prog-track{height:4px;background:var(--card);border-radius:2px;}
+.prog-fill{height:4px;background:var(--accent);border-radius:2px;transition:width .3s;}
+
+.pb-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  margin-bottom:12px;
+  overflow:hidden;
+}
+.pb-head{
+  padding:14px 16px 12px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-start;gap:12px;
+}
+.pb-emoji{font-size:24px;flex-shrink:0;line-height:1;}
+.pb-info{flex:1;}
+.pb-num{
+  font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:3px;
+}
+.pb-name{font-size:15px;font-weight:700;color:var(--text);}
+.pb-q{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.55;}
+.pb-status{
+  font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  padding:2px 7px;border-radius:20px;margin-top:4px;display:inline-block;
+}
+.st-b{background:rgba(239,83,80,.15);color:#ef9a9a;border:1px solid rgba(239,83,80,.25);}
+.st-r{background:rgba(255,143,0,.15);color:#ffcc80;border:1px solid rgba(255,143,0,.25);}
+.st-s{background:rgba(139,195,74,.15);color:#c5e1a5;border:1px solid rgba(139,195,74,.25);}
+
+.pb-body{padding:14px 16px;}
+
+/* Severity */
+.sev-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.sev-row{display:flex;gap:6px;margin-bottom:14px;}
+.sev-btn{
+  flex:1;padding:10px 0;
+  border:1.5px solid var(--border);border-radius:8px;
+  background:transparent;color:var(--muted);
+  font-family:inherit;font-size:14px;font-weight:700;
+  cursor:pointer;transition:all .12s;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+.sev-btn span.sv-n{font-size:16px;font-weight:700;}
+.sev-btn span.sv-l{font-size:8px;letter-spacing:.06em;text-transform:uppercase;}
+.sev-btn.sel-1{background:rgba(139,195,74,.15);border-color:#8bc34a;color:#c5e1a5;}
+.sev-btn.sel-2{background:rgba(139,195,74,.12);border-color:#8bc34a;color:#c5e1a5;}
+.sev-btn.sel-3{background:rgba(255,193,7,.12);border-color:#ffc107;color:#ffe082;}
+.sev-btn.sel-4{background:rgba(255,143,0,.15);border-color:#ff8f00;color:#ffcc80;}
+.sev-btn.sel-5{background:rgba(239,83,80,.15);border-color:#ef5350;color:#ef9a9a;}
+
+/* Voice / text */
+.voice-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+.rec-btn{
+  display:flex;align-items:center;gap:7px;
+  padding:9px 14px;border-radius:8px;
+  border:1.5px solid var(--border);
+  background:transparent;color:var(--muted);
+  font-family:inherit;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  cursor:pointer;transition:all .12s;white-space:nowrap;
+}
+.rec-btn.live{background:rgba(239,83,80,.15);border-color:#ef5350;color:#ef9a9a;}
+.rec-dot{width:8px;height:8px;border-radius:50%;background:currentColor;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.85);}}
+.rec-btn.live .rec-dot{animation:pulse .9s infinite;}
+.rec-timer{font-size:11px;color:var(--muted);font-weight:700;min-width:30px;}
+.rec-sts{font-size:11px;color:var(--muted);line-height:1.4;min-height:14px;margin-bottom:6px;}
+.rec-sts.live{color:var(--accent);}
+.rec-sts.err{color:#ef9a9a;}
+
+.pb-note{
+  width:100%;background:var(--card);
+  border:1.5px solid var(--border);border-radius:8px;
+  color:var(--text);font-family:inherit;font-size:16px;
+  padding:10px 12px;min-height:72px;resize:vertical;line-height:1.5;
+}
+.pb-note:focus{outline:none;border-color:var(--accent);}
+.pb-note::placeholder{color:var(--muted);}
+
+.skip-btn{
+  font-size:11px;color:var(--muted);
+  background:none;border:1px solid var(--border);border-radius:20px;
+  padding:3px 10px;cursor:pointer;font-family:inherit;
+  transition:opacity .12s;
+}
+.skip-btn.skipped{text-decoration:line-through;opacity:.5;}
+
+.assess-actions{margin-top:4px;}
+.save-btn{
+  width:100%;padding:15px;
+  background:var(--accent);color:#0f1a0f;
+  border:none;border-radius:12px;
+  font-family:inherit;font-weight:700;font-size:17px;
+  cursor:pointer;
+  box-shadow:0 4px 20px rgba(139,195,74,.2);
+  transition:opacity .15s;
+}
+.save-btn:active{opacity:.85;}
+
+/* ── RESULTS SCREEN ── */
+.result-hero{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:18px;margin-bottom:12px;text-align:center;
+}
+.result-score-wrap{margin:12px 0;}
+.result-score{font-size:52px;font-weight:700;line-height:1;}
+.result-grade{font-size:13px;color:var(--muted);margin-top:4px;}
+#radar-canvas{display:block;margin:0 auto;}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.rb{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:10px 12px;
+}
+.rb-name{font-size:11px;color:var(--muted);letter-spacing:.05em;margin-bottom:4px;}
+.rb-sev{font-size:18px;font-weight:700;}
+.rb-bar{height:3px;border-radius:2px;background:var(--card);margin-top:4px;}
+.rb-fill{height:3px;border-radius:2px;transition:width .4s;}
+.rb-note{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.4;
+  max-height:36px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+
+/* ── ENTRIES SCREEN ── */
+#entries-count{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px;}
+.entry-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:13px 14px;margin-bottom:8px;cursor:pointer;
+  transition:background .12s;
+}
+.entry-card:active{background:var(--card);}
+.ec-row{display:flex;align-items:center;gap:10px;}
+.ec-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.ec-loc{font-weight:600;font-size:15px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ec-score{font-size:13px;font-weight:700;color:var(--accent);}
+.ec-meta{font-size:11px;color:var(--muted);margin-top:3px;}
+
+/* ── DETAIL / EDIT ── */
+.detail-loc{font-size:22px;font-weight:700;margin-bottom:4px;}
+.detail-meta{font-size:12px;color:var(--muted);margin-bottom:16px;}
+.dl-sec{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;}
+.dl-lbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.dl-val{font-size:14px;line-height:1.6;}
+.del-btn{width:100%;padding:12px;border-radius:10px;border:1px solid rgba(239,83,80,.3);background:rgba(239,83,80,.08);color:#ef9a9a;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;}
+.edit-btn{width:100%;padding:12px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--accent);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;}
+
+/* ── EXPORT ── */
+.exp-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;}
+.exp-title{font-weight:700;font-size:15px;margin-bottom:4px;}
+.exp-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:12px;}
+.exp-btn{
+  width:100%;padding:13px;border-radius:9px;
+  border:1px solid var(--border);background:var(--card);
+  color:var(--text);font-family:inherit;font-size:14px;font-weight:600;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:background .12s;
+}
+.exp-btn:active{background:var(--surface);}
+.exp-btn.pri{background:var(--accent);color:#0f1a0f;border-color:var(--accent);}
+.exp-btn+.exp-btn{margin-top:8px;}
+
+/* ── MODAL ── */
+#modal-ov{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.6);z-index:600;
+  align-items:flex-end;justify-content:center;
+}
+#modal-ov.on{display:flex;}
+.modal-box{
+  background:var(--surface);border-radius:18px 18px 0 0;
+  padding:24px 20px calc(20px + var(--sat-bot));
+  width:100%;max-width:500px;
+  border-top:1px solid var(--border);
+}
+.modal-msg{font-size:15px;line-height:1.6;margin-bottom:20px;}
+.modal-btns{display:flex;gap:10px;}
+.modal-cancel{flex:1;padding:13px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;}
+.modal-ok{flex:1;padding:13px;border-radius:10px;border:none;background:var(--danger);color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:calc(var(--nav-h) + var(--sat-bot) + 12px);left:50%;
+  transform:translateX(-50%) translateY(6px);
+  background:var(--text);color:var(--bg);
+  border-radius:20px;font-size:13px;font-weight:600;
+  padding:9px 18px;opacity:0;pointer-events:none;z-index:700;
+  transition:opacity .2s,transform .2s;white-space:nowrap;
+}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── BACK BTN ── */
+#back-btn{
+  display:none;background:none;border:1px solid var(--border);
+  color:var(--accent);font-family:inherit;font-size:12px;font-weight:700;
+  cursor:pointer;padding:5px 12px;border-radius:7px;letter-spacing:.05em;
+}
+#back-btn.vis{display:block;}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:48px 20px;color:var(--muted);}
+.empty-icon{font-size:44px;margin-bottom:12px;}
+
+/* ── RESULT COLORS ── */
+.sev-color-0{color:var(--muted);}
+.sev-color-1{color:#c5e1a5;}
+.sev-color-2{color:#a5d6a7;}
+.sev-color-3{color:#ffe082;}
+.sev-color-4{color:#ffcc80;}
+.sev-color-5{color:#ef9a9a;}
+
+/* ── ANALYSIS ── */
+.analysis-wrap{margin-top:14px;}
+.analysis-hdr{
+  font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent);font-weight:700;
+  display:flex;align-items:center;gap:7px;
+  margin-bottom:12px;
+}
+.analysis-hdr::after{content:'';flex:1;height:1px;background:var(--border);}
+.signal-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:16px;margin-bottom:10px;
+  position:relative;overflow:hidden;
+}
+.signal-card::before{
+  content:'';position:absolute;top:0;left:0;bottom:0;width:3px;
+}
+.signal-card.critical::before{background:#ef5350;}
+.signal-card.high::before{background:#ff8f00;}
+.signal-card.moderate::before{background:#ffc107;}
+.signal-card.low::before{background:#8bc34a;}
+.signal-card.info::before{background:rgba(120,180,80,.3);}
+.signal-title{
+  font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  margin-bottom:7px;
+}
+.signal-title.critical{color:#ef9a9a;}
+.signal-title.high{color:#ffcc80;}
+.signal-title.moderate{color:#ffe082;}
+.signal-title.low{color:#c5e1a5;}
+.signal-title.info{color:var(--accent);}
+.signal-body{font-size:13px;color:var(--text);line-height:1.7;}
+.obs-block{
+  background:var(--card);border-radius:9px;padding:11px 13px;
+  margin-top:8px;border-left:2px solid var(--border);
+}
+.obs-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.obs-text{font-size:13px;line-height:1.6;font-style:italic;color:var(--text);}
+.cascade-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center;}
+.cascade-tag{font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(139,195,74,.1);border:1px solid rgba(139,195,74,.2);color:var(--accent);font-weight:600;}
+.cascade-arr{color:var(--muted);font-size:12px;}
+.trend-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+.trend-item:last-child{border-bottom:none;}
+.trend-loc{font-size:13px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.trend-chip{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;}
+.t-up{background:rgba(239,83,80,.15);color:#ef9a9a;border:1px solid rgba(239,83,80,.2);}
+.t-dn{background:rgba(139,195,74,.15);color:#c5e1a5;border:1px solid rgba(139,195,74,.2);}
+.t-eq{background:rgba(120,180,80,.08);color:var(--muted);border:1px solid var(--border);}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="hdr">
+  <button id="back-btn" onclick="goBack()">← Back</button>
+  <div style="flex:1;min-width:0">
+    <div id="hdr-title">PB Field Assessment</div>
+    <div id="hdr-sub">Tawang · Planetary Boundaries</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:6px">
+    <div id="net-dot"></div>
+    <span id="net-lbl" style="font-size:10px;color:var(--muted);letter-spacing:.06em"></span>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div id="content">
+
+<!-- HOME -->
+<div class="scr on" id="scr-home">
+  <div class="hero">
+    <div class="hero-label">Planetary Boundaries · Field Tool</div>
+    <div class="hero-title">Tawang Basin<br>Assessment</div>
+    <div class="hero-sub">9 questions · ~5 minutes · voice-enabled</div>
+  </div>
+  <div class="stat-row">
+    <div class="stat"><div class="stat-n" id="s-total">0</div><div class="stat-l">Assessments</div></div>
+    <div class="stat"><div class="stat-n" id="s-avg" style="color:var(--accent2)">—</div><div class="stat-l">Avg score</div></div>
+    <div class="stat"><div class="stat-n" id="s-days">0</div><div class="stat-l">Days</div></div>
+  </div>
+  <button class="big-btn" onclick="startAssessment()">＋ New Assessment</button>
+  <button class="big-btn sec" onclick="showScreen('entries')">View Past Records</button>
+  <div class="sec-lbl">Recent</div>
+  <div id="recent-list"><div class="empty"><div class="empty-icon">🏔</div><p>No assessments yet.<br>Tap New Assessment to begin.</p></div></div>
+</div>
+
+<!-- ASSESS -->
+<div class="scr" id="scr-assess">
+  <div class="assess-progress">
+    <div class="prog-label"><span>Progress</span><span id="prog-txt">0 / 9</span></div>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+  <div class="field" style="margin-bottom:12px">
+    <label style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Location</label>
+    <input id="f-location" type="text" placeholder="e.g. Sela Pass, Zemithang…"
+      style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:16px;padding:10px 12px;-webkit-appearance:none;">
+  </div>
+  <div id="pb-cards"></div>
+  <div class="assess-actions">
+    <button class="save-btn" onclick="saveAssessment()">Save &amp; View Results →</button>
+  </div>
+  <div style="height:16px"></div>
+</div>
+
+<!-- RESULTS -->
+<div class="scr" id="scr-result">
+  <div class="result-hero" id="result-hero"></div>
+  <canvas id="radar-canvas" width="300" height="300"></canvas>
+  <div class="result-grid" id="result-grid"></div>
+  <div class="analysis-wrap" id="analysis-wrap"></div>
+  <button class="edit-btn" id="result-edit-btn">✏️ Edit this assessment</button>
+  <button class="del-btn" id="result-del-btn">🗑 Delete</button>
+  <div style="height:16px"></div>
+</div>
+
+<!-- ENTRIES -->
+<div class="scr" id="scr-entries">
+  <div id="entries-count"></div>
+  <div id="entries-list"></div>
+</div>
+
+<!-- EXPORT -->
+<div class="scr" id="scr-export">
+  <div class="exp-card" style="border-color:rgba(139,195,74,.35)">
+    <div class="exp-title">📲 Download App + Data</div>
+    <div class="exp-desc">Downloads this app as a single HTML file with all your assessments baked in. WhatsApp it to your phone, open in Chrome — data is there.</div>
+    <button class="exp-btn pri" onclick="exportSelf()">⬇ Download App + Data</button>
+  </div>
+  <div class="exp-card">
+    <div class="exp-title">📊 Export CSV</div>
+    <div class="exp-desc">Open in Excel or Google Sheets.</div>
+    <button class="exp-btn" onclick="exportCSV()">⬇ Download CSV</button>
+  </div>
+  <div class="exp-card">
+    <div class="exp-title">📤 Share Summary</div>
+    <div class="exp-desc">Send via WhatsApp or email.</div>
+    <button class="exp-btn" onclick="shareText()">↗ Share</button>
+  </div>
+  <div class="exp-card">
+    <div class="exp-title">📲 Install as App</div>
+    <div class="exp-desc">Chrome (Android): tap ⋮ → Add to Home screen</div>
+    <button class="exp-btn" onclick="triggerInstall()">Install shortcut</button>
+  </div>
+  <div class="exp-card" style="border-color:rgba(239,83,80,.2)">
+    <div class="exp-title">🗑 Clear All Data</div>
+    <div class="exp-desc">Permanently deletes all assessments. Export first!</div>
+    <button class="exp-btn" style="color:#ef9a9a;border-color:rgba(239,83,80,.3)" onclick="clearAll()">Clear all</button>
+  </div>
+</div>
+
+<!-- GUIDE -->
+<div class="scr" id="scr-guide">
+
+  <div class="exp-card" style="border-color:rgba(139,195,74,.35)">
+    <div class="exp-title">📥 Step 1 — Download the App File</div>
+    <div class="exp-desc">Everything is in one <code style="background:var(--card);padding:1px 5px;border-radius:4px;font-size:11px">.html</code> file. Download it to your laptop first.<br><br>
+      1. In Claude, right-click the file link → <strong>Save Link As…</strong><br>
+      2. Save as <code style="background:var(--card);padding:1px 5px;border-radius:4px;font-size:11px">pb-field-tawang.html</code> to your Desktop.
+    </div>
+  </div>
+
+  <div class="exp-card">
+    <div class="exp-title">🐙 Step 2 — Put it on GitHub Pages</div>
+    <div class="exp-desc">GitHub Pages gives you a permanent HTTPS URL — required for the microphone to work in Chrome on Android.<br><br>
+      <strong>A. Create account</strong> (skip if you have one)<br>
+      Go to <strong>github.com</strong> → Sign Up → verify email.<br><br>
+      <strong>B. Create a repository</strong><br>
+      Click ＋ (top-right) → New repository<br>
+      Name: <code style="background:var(--card);padding:1px 5px;border-radius:4px;font-size:11px">pb-tawang</code> · Set to <strong>Public</strong> · Tick <em>Add README</em> → Create.<br><br>
+      <strong>C. Upload the file</strong><br>
+      In the repo → Add file → Upload files → drag in <code style="background:var(--card);padding:1px 5px;border-radius:4px;font-size:11px">pb-field-tawang.html</code> → Commit changes.<br><br>
+      <strong>D. Enable Pages</strong><br>
+      Settings tab → Pages (left sidebar) → Branch: <strong>main</strong>, folder: <strong>/ (root)</strong> → Save.<br>
+      Wait ~60 seconds. A green banner appears with your URL:<br>
+      <code style="background:var(--card);padding:2px 6px;border-radius:4px;font-size:11px;display:block;margin-top:6px;word-break:break-all">https://YOUR-USERNAME.github.io/pb-tawang/pb-field-tawang.html</code>
+    </div>
+  </div>
+
+  <div class="exp-card">
+    <div class="exp-title">📱 Step 3 — Open on Your Phone</div>
+    <div class="exp-desc">
+      <strong>Android → Chrome</strong><br>
+      Open <strong>Chrome</strong> (not Samsung Browser, not Firefox).<br>
+      Paste the GitHub Pages URL → tap Allow when mic is requested.<br>
+      To install: ⋮ menu → Add to Home Screen.<br><br>
+      <div style="background:rgba(255,143,0,.12);border-radius:7px;padding:8px 10px;font-size:11px;color:var(--accent2);margin-bottom:10px">
+        ⚠️ Never open via Google Drive or as a local file — mic is blocked that way on Android. Always use the GitHub URL in Chrome.
+      </div>
+      <strong>iPhone → Safari</strong><br>
+      Open <strong>Safari</strong> (not Chrome on iOS).<br>
+      Paste URL → Share → Add to Home Screen.<br>
+      Tap Record → Allow mic when Safari asks.<br>
+      <div style="margin-top:8px;font-size:11px;color:var(--muted)">💡 iOS uses non-continuous recognition — the app auto-restarts it silently. Just speak at a steady pace.</div>
+    </div>
+  </div>
+
+  <div class="exp-card">
+    <div class="exp-title">🔄 Step 4 — Updating Later</div>
+    <div class="exp-desc">
+      When you get a new version from Claude:<br><br>
+      1. Go to your repo on github.com<br>
+      2. Drag the new <code style="background:var(--card);padding:1px 5px;border-radius:4px;font-size:11px">.html</code> file onto the repo page → it asks to replace the old one.<br>
+      3. Commit changes → live in ~60 seconds.<br><br>
+      <div style="font-size:11px;color:var(--muted)">💡 Your field data lives in the phone's browser storage, not in the file — updating never deletes your records.</div>
+    </div>
+  </div>
+
+  <div class="exp-card">
+    <div class="exp-title">🎙 Recording Tips</div>
+    <div class="exp-desc" style="line-height:1.8">
+      · Open via the GitHub Pages URL in <strong>Chrome (Android)</strong> or <strong>Safari (iPhone)</strong><br>
+      · Hold phone 15–25 cm from mouth<br>
+      · Speak at a steady, clear pace<br>
+      · Short pause between sentences helps the engine finalise words<br>
+      · If signal is weak, dictate in short bursts — the text is saved as each sentence finalises<br>
+      · After recording, always scroll up and <strong>check the text</strong> before saving — Tawang place names (Zemithang, Shonga-tser, Gorichen) may need a quick fix<br>
+      · Expected accuracy: 85–95% clear speech / good signal; drops in wind — find shelter or type manually
+    </div>
+  </div>
+
+  <div style="height:16px"></div>
+</div>
+
+</div><!-- end #content -->
+
+<!-- NAV -->
+<div id="nav">
+  <button class="nb on" id="nb-home" onclick="showScreen('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+    <span>Home</span>
+  </button>
+  <button class="nb" id="nb-assess" onclick="startAssessment()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    <span>Assess</span>
+  </button>
+  <button class="nb" id="nb-entries" onclick="showScreen('entries')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    <span>Records</span>
+  </button>
+  <button class="nb" id="nb-export" onclick="showScreen('export')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16,6 12,2 8,6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+    <span>Export</span>
+  </button>
+  <button class="nb" id="nb-guide" onclick="showScreen('guide')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    <span>Guide</span>
+  </button>
+</div>
+
+<!-- MODAL -->
+<div id="modal-ov">
+  <div class="modal-box">
+    <div class="modal-msg" id="modal-msg"></div>
+    <div class="modal-btns">
+      <button class="modal-cancel" id="modal-cancel">Cancel</button>
+      <button class="modal-ok" id="modal-ok">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- DATA SEED (must be before main script) -->
+<script type="application/json" id="__PB_SEED__"></script>
+
+<script>
+// ══ PLANETARY BOUNDARIES DATA ══════════════════════════════════════
+const PB = [
+  {
+    id:'climate', n:1, emoji:'🌡', name:'Climate Change',
+    status:'b', statusLabel:'Breached',
+    q:'Has snow arrival, glacier size, or temperature noticeably changed here in recent years?',
+    ph:'e.g. snow arriving later, glaciers visibly smaller, summers hotter than elders remember…',
+    hint:'Ask elders: "Kha-ba dgun-ka nga-song?" — has snow come earlier this year?'
+  },
+  {
+    id:'biosphere', n:2, emoji:'🌿', name:'Biosphere Integrity',
+    status:'b', statusLabel:'Breached',
+    q:'Have any plants or animals disappeared, moved to higher elevations, or appeared where never seen before?',
+    ph:'e.g. Brahmakamal harder to find below 4000m, treeline visibly higher, new insects seen…',
+    hint:'Note any species name changes or sighting elevations vs elder memory.'
+  },
+  {
+    id:'land', n:3, emoji:'🏔', name:'Land-System Change',
+    status:'b', statusLabel:'Breached',
+    q:'What visible changes from roads, construction, deforestation, or settlement expansion are present here?',
+    ph:'e.g. new road cutting through forest, slope cleared for building, farmland expanded into forest…',
+    hint:'Look for bare slopes, erosion scars, recent clearing near treeline.'
+  },
+  {
+    id:'freshwater', n:4, emoji:'💧', name:'Freshwater Change',
+    status:'b', statusLabel:'Breached',
+    q:'Are springs, streams, or lakes behaving differently — drying earlier, flooding more, or changing colour?',
+    ph:'e.g. village spring now dry in May, lake level visibly lower, stream floods more than before…',
+    hint:'Ask: "Chhu nyam-song?" — has the water diminished?'
+  },
+  {
+    id:'nitrogen', n:5, emoji:'🌾', name:'Biogeochemical Flows',
+    status:'b', statusLabel:'Breached',
+    q:'Is there evidence of fertiliser use, unusual algae blooms, or changes in meadow plant composition?',
+    ph:'e.g. fertiliser sacks near fields, green algae in stream, nettles spreading in meadow…',
+    hint:'Note any colour changes in water bodies or unusual plant dominance.'
+  },
+  {
+    id:'novel', n:6, emoji:'🗑', name:'Novel Entities',
+    status:'b', statusLabel:'Breached',
+    q:'Where is plastic waste, chemical runoff, or black carbon deposits on snow most visible?',
+    ph:'e.g. plastic litter along river banks, dark patches on glacier edges, diesel spill near road…',
+    hint:'Black carbon on snow dramatically accelerates glacier melt.'
+  },
+  {
+    id:'aerosol', n:7, emoji:'🌫', name:'Aerosol Loading',
+    status:'r', statusLabel:'At Risk',
+    q:'Is visibility reduced by haze, smoke, or a brown horizon? Has this changed seasonally?',
+    ph:'e.g. used to see Bhutan peaks clearly, now haze most mornings, smoke from crop burning…',
+    hint:'Note direction of haze — cross-border transport matters here.'
+  },
+  {
+    id:'ozone', n:8, emoji:'☀️', name:'Stratospheric Ozone',
+    status:'s', statusLabel:'Recovering',
+    q:'Do locals or farmers notice stronger UV burn on skin or crops drying faster in high-altitude sun?',
+    ph:'e.g. skin burns faster than before, buckwheat leaves scorching, need sunscreen now…',
+    hint:'At 3000m+ UV intensity is significantly higher than plains.'
+  },
+  {
+    id:'ocean', n:9, emoji:'🏞', name:'Lake Acidification',
+    status:'r', statusLabel:'At Risk',
+    q:'Have high-altitude lakes changed in colour, smell, fish presence, or aquatic plant life?',
+    ph:'e.g. fewer fish in Shonga-tser, lake colour greener or brown, unusual smell near shore…',
+    hint:'Shonga-tser / P.T. Tso are key reference lakes for this boundary.'
+  }
+];
+
+const SEV_LABELS = ['—','Low','Slight','Moderate','High','Critical'];
+const SEV_COLORS = ['#7a9e7a','#c5e1a5','#a5d6a7','#ffe082','#ffcc80','#ef9a9a'];
+
+// ══ STATE ═══════════════════════════════════════════════════════════
+let records = [];
+let currentScreen = 'home';
+let editingId = null;
+let recState = {};
+PB.forEach(p => {
+  recState[p.id] = {active:false,recog:null,timerInt:null,seconds:0,committed:'',restarting:false};
+});
+
+const IS_IOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+
+// ══ STORAGE ═════════════════════════════════════════════════════════
+function save(){try{localStorage.setItem('pb_records',JSON.stringify(records));}catch(e){}}
+function load(){
+  try{
+    const d=localStorage.getItem('pb_records');
+    if(d){const p=JSON.parse(d);if(p&&p.length){records=p;return;}}
+  }catch(e){}
+  try{
+    const el=document.getElementById('__PB_SEED__');
+    if(el&&el.textContent.trim()){
+      const p=JSON.parse(el.textContent);
+      if(p&&p.length){records=p;save();}
+    }
+  }catch(e){}
+}
+
+// ══ NET ══════════════════════════════════════════════════════════════
+function updateNet(){
+  const on=navigator.onLine;
+  document.getElementById('net-dot').className=on?'':'off';
+  document.getElementById('net-lbl').textContent=on?'Online':'Offline';
+}
+window.addEventListener('online',updateNet);
+window.addEventListener('offline',updateNet);
+updateNet();
+
+// ══ TOAST ════════════════════════════════════════════════════════════
+function toast(m){
+  const el=document.getElementById('toast');
+  el.textContent=m;el.classList.add('on');
+  setTimeout(()=>el.classList.remove('on'),2500);
+}
+
+// ══ MODAL ════════════════════════════════════════════════════════════
+function confirm2(msg,okLabel,cb){
+  const ov=document.getElementById('modal-ov');
+  document.getElementById('modal-msg').textContent=msg;
+  const ok=document.getElementById('modal-ok');
+  const cancel=document.getElementById('modal-cancel');
+  ok.textContent=okLabel||'Confirm';
+  ov.classList.add('on');
+  const done=()=>{ov.classList.remove('on');ok.onclick=null;cancel.onclick=null;};
+  ok.onclick=()=>{done();cb();};
+  cancel.onclick=done;
+}
+
+// ══ KEYBOARD AWARE ═══════════════════════════════════════════════════
+(function(){
+  const vv=window.visualViewport;
+  if(!vv)return;
+  function onVV(){
+    const kb=window.innerHeight-vv.height;
+    const nav=document.getElementById('nav');
+    const content=document.getElementById('content');
+    if(kb>100){
+      if(nav)nav.style.transform='translateY(110%)';
+      if(content)content.style.bottom='0';
+    }else{
+      if(nav)nav.style.transform='';
+      if(content)content.style.bottom='calc(var(--nav-h) + var(--sat-bot))';
+    }
+  }
+  vv.addEventListener('resize',onVV);
+})();
+
+// ══ SCREEN ═══════════════════════════════════════════════════════════
+const SCREENS=['home','assess','result','entries','export','guide'];
+function showScreen(s){
+  if(currentScreen==='assess'&&s!=='assess') stopAllRec();
+  SCREENS.forEach(id=>{
+    const el=document.getElementById('scr-'+id);
+    if(el)el.className='scr'+(id===s?' on':'');
+  });
+  ['home','entries','export','guide'].forEach(id=>{
+    const nb=document.getElementById('nb-'+id);
+    if(nb)nb.className='nb'+(id===s?' on':'');
+  });
+  const nb_a=document.getElementById('nb-assess');
+  if(nb_a)nb_a.className='nb'+(s==='assess'?' on':'');
+  const bb=document.getElementById('back-btn');
+  bb.className=(s==='result'||s==='entries'&&editingId)?'vis':'';
+  currentScreen=s;
+  if(s==='home')refreshHome();
+  if(s==='entries')refreshEntries();
+  if(s==='export')refreshExport();
+  document.getElementById('content').scrollTop=0;
+}
+function goBack(){
+  if(currentScreen==='result')showScreen('entries');
+  else showScreen('home');
+}
+
+// ══ ASSESSMENT ════════════════════════════════════════════════════════
+function startAssessment(){
+  editingId=null;
+  buildAssessForm();
+  showScreen('assess');
+}
+
+function buildAssessForm(){
+  const c=document.getElementById('pb-cards');
+  c.innerHTML='';
+  // Reset rec state
+  PB.forEach(p=>{
+    recState[p.id]={active:false,recog:null,timerInt:null,seconds:0,committed:'',restarting:false};
+  });
+  // Set today's date in location if empty (reuse observer name logic)
+  document.getElementById('f-location').value='';
+  updateProgress();
+
+  PB.forEach((pb,i)=>{
+    const statusCls = pb.status==='b'?'st-b':pb.status==='r'?'st-r':'st-s';
+    const card=document.createElement('div');
+    card.className='pb-card';
+    card.id='pbc-'+pb.id;
+    card.innerHTML=
+      '<div class="pb-head">'+
+        '<div class="pb-emoji">'+pb.emoji+'</div>'+
+        '<div class="pb-info">'+
+          '<div class="pb-num">BOUNDARY '+pb.n+' OF 9</div>'+
+          '<div class="pb-name">'+pb.name+'</div>'+
+          '<span class="pb-status '+statusCls+'">'+pb.statusLabel+'</span>'+
+          '<div class="pb-q">'+pb.q+'</div>'+
+          (pb.hint?'<div style="font-size:11px;color:var(--accent);margin-top:5px;line-height:1.4">💡 '+pb.hint+'</div>':'')+
+        '</div>'+
+      '</div>'+
+      '<div class="pb-body" id="pbb-'+pb.id+'">'+
+        '<div class="sev-label">Severity <span id="sv-word-'+pb.id+'" style="color:var(--muted)">— not rated</span></div>'+
+        '<div class="sev-row">'+
+          [1,2,3,4,5].map(n=>'<button class="sev-btn" id="sv-'+pb.id+'-'+n+'" data-pb="'+pb.id+'" data-v="'+n+'" onclick="setSev(this)"><span class="sv-n">'+n+'</span><span class="sv-l">'+SEV_LABELS[n]+'</span></button>').join('')+
+        '</div>'+
+        '<div class="voice-row">'+
+          '<button class="rec-btn" id="rb-'+pb.id+'" onclick="toggleRec(\''+pb.id+'\')"><span class="rec-dot"></span><span id="rl-'+pb.id+'">Record</span></button>'+
+          '<span class="rec-timer" id="rt-'+pb.id+'"></span>'+
+          '<button class="skip-btn" id="sk-'+pb.id+'" onclick="toggleSkip(\''+pb.id+'\')">N/A</button>'+
+        '</div>'+
+        '<div class="rec-sts" id="rs-'+pb.id+'">Tap Record to dictate, or type below</div>'+
+        '<textarea class="pb-note" id="fn-'+pb.id+'" placeholder="'+pb.ph+'" oninput="onNoteInput(\''+pb.id+'\')" ></textarea>'+
+      '</div>'+
+      '<div id="sk-msg-'+pb.id+'" style="display:none;padding:10px 16px;font-size:12px;color:var(--muted);font-style:italic">Not applicable — skipped.</div>';
+    c.appendChild(card);
+  });
+}
+
+function onNoteInput(id){updateProgress();}
+
+function updateProgress(){
+  const filled=PB.filter(pb=>{
+    const sk=document.getElementById('sk-'+pb.id);
+    if(sk&&sk.classList.contains('skipped'))return true;
+    const sev=getSelSev(pb.id);
+    return sev>0;
+  }).length;
+  const pct=Math.round(filled/9*100);
+  const fill=document.getElementById('prog-fill');
+  const txt=document.getElementById('prog-txt');
+  if(fill)fill.style.width=pct+'%';
+  if(txt)txt.textContent=filled+' / 9';
+}
+
+function setSev(btn){
+  const pbId=btn.dataset.pb;
+  const v=parseInt(btn.dataset.v);
+  [1,2,3,4,5].forEach(n=>{
+    const b=document.getElementById('sv-'+pbId+'-'+n);
+    if(b)b.className='sev-btn'+(n===v?' sel-'+n:'');
+  });
+  const word=document.getElementById('sv-word-'+pbId);
+  if(word){word.textContent='— '+SEV_LABELS[v];word.style.color=SEV_COLORS[v];}
+  updateProgress();
+}
+
+function getSelSev(pbId){
+  for(let n=1;n<=5;n++){
+    const b=document.getElementById('sv-'+pbId+'-'+n);
+    if(b&&b.className.includes('sel-'))return n;
+  }
+  return 0;
+}
+
+function toggleSkip(id){
+  const sk=document.getElementById('sk-'+id);
+  const body=document.getElementById('pbb-'+id);
+  const msg=document.getElementById('sk-msg-'+id);
+  const skipped=sk.classList.toggle('skipped');
+  if(body)body.style.display=skipped?'none':'';
+  if(msg)msg.style.display=skipped?'block':'none';
+  updateProgress();
+}
+
+// ══ VOICE RECORDING ══════════════════════════════════════════════════
+function stopAllRec(){
+  PB.forEach(pb=>{ if(recState[pb.id]&&recState[pb.id].active) stopRec(pb.id); });
+}
+
+function toggleRec(id){recState[id].active?stopRec(id):startRec(id);}
+
+function startRec(id){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const sts=document.getElementById('rs-'+id);
+  if(!SR){
+    if(sts){sts.className='rec-sts err';sts.textContent=IS_IOS?'\u26a0 Use Safari on iPhone for voice.':'\u26a0 Voice needs Chrome on Android.';}
+    return;
+  }
+  const st=recState[id];
+  if(st.recog){try{st.recog.abort();}catch(e){}}
+  clearInterval(st.timerInt);
+  st.restarting=false;
+  const ta=document.getElementById('fn-'+id);
+  st.committed=ta?ta.value.trim():'';
+  st.seconds=0;st.active=true;
+  const btn=document.getElementById('rb-'+id);
+  const lbl=document.getElementById('rl-'+id);
+  const tmr=document.getElementById('rt-'+id);
+  if(btn)btn.className='rec-btn live';
+  if(lbl)lbl.textContent='Stop';
+  if(tmr)tmr.textContent='0:00';
+  if(sts){sts.className='rec-sts live';sts.textContent='Starting mic\u2026';}
+  st.timerInt=setInterval(()=>{
+    st.seconds++;
+    if(tmr)tmr.textContent=fmtT(st.seconds);
+  },1000);
+
+  function go(){
+    if(!st.active||st.restarting)return;
+    st.restarting=true;
+    const r=new SR();
+    st.recog=r;
+    r.lang='en-IN';r.continuous=!IS_IOS;r.interimResults=true;r.maxAlternatives=1;
+    r.onstart=()=>{st.restarting=false;if(sts){sts.className='rec-sts live';sts.textContent='\ud83d\udd34 Recording \u2014 speak now';}};
+    r.onresult=evt=>{
+      if(!st.active)return;
+      let interim='';
+      for(let i=evt.resultIndex;i<evt.results.length;i++){
+        const ch=evt.results[i][0].transcript;
+        if(evt.results[i].isFinal){st.committed+=(st.committed&&!st.committed.endsWith(' ')?' ':'')+ch.trim();interim='';}
+        else interim+=ch;
+      }
+      if(ta)ta.value=st.committed+(interim?' '+interim:'');
+      if(sts){sts.className='rec-sts live';sts.textContent=interim?'\u270d Transcribing\u2026':'\ud83d\udd34 Keep speaking';}
+      updateProgress();
+    };
+    r.onerror=evt=>{
+      st.restarting=false;
+      if(evt.error==='aborted')return;
+      if(evt.error==='no-speech'){if(st.active){st.restarting=true;setTimeout(go,400);}return;}
+      if(evt.error==='not-allowed'||evt.error==='service-not-allowed'){
+        if(sts){sts.className='rec-sts err';sts.textContent='\u26a0 Tap \ud83d\udd12 in Chrome \u2192 Site settings \u2192 Mic \u2192 Allow';}
+        stopRec(id);return;
+      }
+      if(evt.error==='network'){
+        clearInterval(st.timerInt);
+        const tmr2=document.getElementById('rt-'+id);if(tmr2)tmr2.textContent='';
+        if(sts){sts.className='rec-sts err';sts.textContent='\u26a0 Network needed for voice. Check signal.';}
+        stopRec(id);return;
+      }
+      if(st.active){st.restarting=true;setTimeout(go,600);}
+    };
+    r.onend=()=>{
+      st.restarting=false;
+      // Commit any partial interim that was in the textarea before restart
+      if(ta&&ta.value&&ta.value!==st.committed){
+        const cur=ta.value.trim();
+        if(cur.startsWith(st.committed))st.committed=cur;
+        ta.value=st.committed;
+      }
+      if(st.active){st.restarting=true;setTimeout(go,IS_IOS?250:350);}
+    };
+    try{r.start();}catch(e){st.restarting=false;if(st.active){st.restarting=true;setTimeout(go,600);}}
+  }
+  go();
+}
+
+function stopRec(id){
+  const st=recState[id];if(!st)return;
+  st.active=false;st.restarting=false;
+  if(st.recog){try{st.recog.abort();}catch(e){}}
+  clearInterval(st.timerInt);
+  const ta=document.getElementById('fn-'+id);
+  if(ta&&!st.committed&&ta.value)st.committed=ta.value.trim();
+  if(ta){ta.value=st.committed;ta.scrollTop=ta.scrollHeight;}
+  const tmr=document.getElementById('rt-'+id);if(tmr)tmr.textContent='';
+  const btn=document.getElementById('rb-'+id);if(btn)btn.className='rec-btn';
+  const lbl=document.getElementById('rl-'+id);if(lbl)lbl.textContent='Re-record';
+  const sts=document.getElementById('rs-'+id);
+  if(sts){sts.className='rec-sts';sts.textContent='\u2713 Done ('+fmtT(st.seconds)+'). Edit above or tap Re-record.';}
+}
+function fmtT(s){return Math.floor(s/60)+':'+(s%60<10?'0':'')+(s%60);}
+
+// ══ SAVE ASSESSMENT ══════════════════════════════════════════════════
+function saveAssessment(){
+  const loc=document.getElementById('f-location').value.trim();
+  if(!loc){toast('Please enter a location name');return;}
+  stopAllRec();
+  const boundaries={};
+  let answeredCount=0;
+  PB.forEach(pb=>{
+    const skipped=document.getElementById('sk-'+pb.id)&&document.getElementById('sk-'+pb.id).classList.contains('skipped');
+    const severity=skipped?null:getSelSev(pb.id);
+    const note=skipped?'':(document.getElementById('fn-'+pb.id)||{value:''}).value||'';
+    boundaries[pb.id]={severity,note,skipped};
+    if(!skipped&&severity>0)answeredCount++;
+  });
+  const totalSev=PB.filter(pb=>boundaries[pb.id]&&!boundaries[pb.id].skipped&&boundaries[pb.id].severity>0)
+    .reduce((s,pb)=>s+boundaries[pb.id].severity,0);
+  const answered=PB.filter(pb=>!boundaries[pb.id].skipped&&boundaries[pb.id].severity>0).length;
+  const avgSev=answered?Math.round((totalSev/answered)*10)/10:0;
+
+  const rec={
+    id:editingId||Date.now().toString(),
+    timestamp:new Date().toISOString(),
+    date:new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+    time:new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:false}),
+    location:loc,
+    boundaries,
+    avgSev,
+    answered
+  };
+
+  if(editingId){
+    const idx=records.findIndex(r=>r.id===editingId);
+    if(idx>=0)records.splice(idx,1,rec);else records.unshift(rec);
+    editingId=null;
+    toast('Assessment updated \u2713');
+  }else{
+    records.unshift(rec);
+    toast('Saved \u2713');
+  }
+  save();
+  showResult(rec.id);
+}
+
+// ══ RESULTS ══════════════════════════════════════════════════════════
+function showResult(id){
+  const rec=records.find(r=>r.id===id);
+  if(!rec)return;
+
+  // Hero
+  const hero=document.getElementById('result-hero');
+  const grade=rec.avgSev>=4?'Critical pressure':rec.avgSev>=3?'High pressure':rec.avgSev>=2?'Moderate pressure':rec.avgSev>0?'Low pressure':'Not yet scored';
+  const gradeColor=rec.avgSev>=4?'#ef9a9a':rec.avgSev>=3?'#ffcc80':rec.avgSev>=2?'#ffe082':'#c5e1a5';
+  hero.innerHTML=
+    '<div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Assessment Result</div>'+
+    '<div style="font-size:20px;font-weight:700;margin-bottom:2px">'+rec.location+'</div>'+
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:14px">'+rec.date+' \u00b7 '+rec.time+' \u00b7 '+rec.answered+'/9 boundaries</div>'+
+    '<div style="font-size:48px;font-weight:700;color:'+gradeColor+';line-height:1">'+
+      (rec.avgSev?rec.avgSev.toFixed(1):'\u2014')+
+      '<span style="font-size:18px;color:var(--muted)"> /5</span>'+
+    '</div>'+
+    '<div style="font-size:13px;color:'+gradeColor+';margin-top:4px">'+grade+'</div>';
+
+  // Radar
+  drawRadar(rec);
+
+  // Grid
+  const grid=document.getElementById('result-grid');
+  grid.innerHTML=PB.map(pb=>{
+    const d=rec.boundaries[pb.id];
+    const sev=d&&!d.skipped&&d.severity?d.severity:0;
+    const pct=sev/5*100;
+    const col=SEV_COLORS[sev];
+    return '<div class="rb">'+
+      '<div class="rb-name">'+pb.emoji+' '+pb.name+'</div>'+
+      '<div class="rb-sev '+('sev-color-'+sev)+'">'+
+        (d&&d.skipped?'N/A':sev?sev+' — '+SEV_LABELS[sev]:'—')+
+      '</div>'+
+      '<div class="rb-bar"><div class="rb-fill" style="width:'+pct+'%;background:'+col+'"></div></div>'+
+      (d&&d.note?'<div class="rb-note">'+d.note+'</div>':'')+
+    '</div>';
+  }).join('');
+
+  // Analysis
+  buildAnalysis(rec);
+
+  // Buttons
+  document.getElementById('result-edit-btn').onclick=()=>editRecord(rec.id);
+  document.getElementById('result-del-btn').onclick=()=>{
+    confirm2('Delete this assessment?','Delete',()=>{
+      records=records.filter(r=>r.id!==id);save();showScreen('entries');toast('Deleted');
+    });
+  };
+
+  document.getElementById('back-btn').className='vis';
+  showScreen('result');
+}
+
+// ══ ANALYSIS ═════════════════════════════════════════════════════════
+function buildAnalysis(rec){
+  const wrap = document.getElementById('analysis-wrap');
+  if(!wrap) return;
+  const html = [];
+
+  // Helper: get scored boundaries
+  const scored = PB.filter(pb=>{
+    const d=rec.boundaries[pb.id];
+    return d && !d.skipped && d.severity > 0;
+  });
+  const critical = scored.filter(pb=>rec.boundaries[pb.id].severity >= 4);
+  const high     = scored.filter(pb=>rec.boundaries[pb.id].severity === 3);
+  const withNotes= scored.filter(pb=>rec.boundaries[pb.id].note && rec.boundaries[pb.id].note.trim().length > 5);
+
+  if(!scored.length){ wrap.innerHTML=''; return; }
+
+  // ── 1. REGIONAL SIGNAL ──────────────────────────────────────────
+  html.push('<div class="analysis-hdr">Analysis</div>');
+
+  const level = rec.avgSev>=4?'critical':rec.avgSev>=3?'high':rec.avgSev>=2?'moderate':'low';
+  const signals = {
+    critical: 'This site shows <b>critical planetary boundary stress</b>. Multiple boundaries are simultaneously breached at high severity — a pattern consistent with compounding ecological breakdown rather than isolated impacts. Urgent documentation and escalation warranted.',
+    high:     'This site shows <b>high cumulative pressure</b> across planetary boundaries. The pattern suggests active transgression of regional ecological thresholds. Observations here are research-significant and should be cross-referenced with seasonal baselines.',
+    moderate: 'This site shows <b>moderate boundary pressure</b>. Some boundaries are approaching or at their safe operating limits. Worth monitoring closely for upward trend across revisits.',
+    low:      'This site currently shows <b>low boundary pressure</b>. Either conditions are relatively intact, or some high-pressure boundaries were not assessed. Cross-check with elder memory for longer-term context.'
+  };
+  html.push(
+    '<div class="signal-card '+level+'">'+
+      '<div class="signal-title '+level+'">Overall Regional Signal</div>'+
+      '<div class="signal-body">'+signals[level]+'</div>'+
+    '</div>'
+  );
+
+  // ── 2. CRITICAL PRESSURE POINTS ─────────────────────────────────
+  if(critical.length){
+    let body = 'The following boundaries are under <b>severe stress</b> at this site:';
+    body += '<div style="margin-top:10px">';
+    critical.forEach(pb=>{
+      const d = rec.boundaries[pb.id];
+      const sevLabel = SEV_LABELS[d.severity];
+      const col = SEV_COLORS[d.severity];
+      body += '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px">'+
+        '<span style="font-size:18px;flex-shrink:0">'+pb.emoji+'</span>'+
+        '<div>'+
+          '<div style="font-size:13px;font-weight:700;color:'+col+'">'+pb.name+
+            ' <span style="font-size:11px;font-weight:400">— '+d.severity+'/5 ('+sevLabel+')</span>'+
+          '</div>'+
+          (d.note?'<div class="obs-block"><div class="obs-label">Field observation</div><div class="obs-text">\u201c'+d.note+'\u201d</div></div>':
+            '<div style="font-size:12px;color:var(--muted);margin-top:4px;font-style:italic">No observation recorded.</div>')+
+        '</div>'+
+      '</div>';
+    });
+    body += '</div>';
+    html.push('<div class="signal-card critical"><div class="signal-title critical">Critical Pressure Points</div><div class="signal-body">'+body+'</div></div>');
+  }
+
+  // ── 3. BOUNDARY CASCADE DETECTION ───────────────────────────────
+  // Known linked-boundary cascades for high-altitude Himalayan context
+  const cascades = [
+    {
+      ids:['climate','freshwater','biosphere'],
+      label:'Glacier-Water-Ecology Cascade',
+      desc:'Glacier retreat \u2192 reduced dry-season streamflow \u2192 vegetation stress and species range shift. All three boundaries showing elevated scores here suggests this cascade may be active.'
+    },
+    {
+      ids:['climate','land','freshwater'],
+      label:'Erosion-Runoff Cascade',
+      desc:'Warming \u2192 permafrost thaw and slope instability \u2192 increased erosion and siltation of streams. Road construction amplifies this cascade significantly in Tawang terrain.'
+    },
+    {
+      ids:['land','biosphere','nitrogen'],
+      label:'Habitat-Nutrient Cascade',
+      desc:'Land clearing and agricultural expansion \u2192 habitat fragmentation \u2192 fertiliser use increase \u2192 nutrient loading in waterbodies. A common cascade at the forest-farm edge in this region.'
+    },
+    {
+      ids:['aerosol','climate','ozone'],
+      label:'Atmospheric Forcing Cascade',
+      desc:'Black carbon aerosol deposition on snow and glacier surfaces accelerates melt, amplifying climate boundary transgression. Ozone thinning raises UV at altitude, stressing both crops and ecosystems.'
+    },
+    {
+      ids:['freshwater','ocean'],
+      label:'Watershed-Lake Acidification Link',
+      desc:'Changes in upstream hydrology and land use affect the chemistry and ecology of high-altitude lakes. Shonga-tser and similar lakes are sensitive early indicators.'
+    }
+  ];
+
+  const activeCascades = cascades.filter(cas=>{
+    const active = cas.ids.filter(id=>{
+      const d = rec.boundaries[id];
+      return d && !d.skipped && d.severity >= 2;
+    });
+    return active.length >= 2;
+  });
+
+  if(activeCascades.length){
+    let body = 'Based on the scores, <b>'+activeCascades.length+' potential boundary cascade'+(activeCascades.length>1?'s':'')+' </b> may be active at this site:';
+    activeCascades.forEach(cas=>{
+      const sevs = cas.ids.map(id=>{
+        const d=rec.boundaries[id];
+        return d&&!d.skipped&&d.severity?d.severity:0;
+      });
+      const maxSev = Math.max(...sevs);
+      const col = SEV_COLORS[Math.min(maxSev,5)];
+      body += '<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">'+
+        '<div style="font-size:12px;font-weight:700;color:'+col+';margin-bottom:4px">'+cas.label+'</div>'+
+        '<div class="cascade-wrap">';
+      cas.ids.forEach((id,i)=>{
+        const pb = PB.find(p=>p.id===id);
+        const d = rec.boundaries[id];
+        const sev = d&&!d.skipped&&d.severity?d.severity:0;
+        const c = SEV_COLORS[sev];
+        body += '<span class="cascade-tag" style="color:'+c+';border-color:'+c+'40">'+pb.emoji+' '+pb.name+(sev?' ('+sev+')':'')+'</span>';
+        if(i<cas.ids.length-1) body += '<span class="cascade-arr">\u2192</span>';
+      });
+      body += '</div>'+
+        '<div style="font-size:12px;color:var(--muted);margin-top:7px;line-height:1.6">'+cas.desc+'</div>'+
+      '</div>';
+    });
+    html.push('<div class="signal-card high"><div class="signal-title high">Cascade Detection</div><div class="signal-body">'+body+'</div></div>');
+  }
+
+  // ── 4. ALL FIELD OBSERVATIONS ────────────────────────────────────
+  if(withNotes.length){
+    let body = withNotes.map(pb=>{
+      const d = rec.boundaries[pb.id];
+      const sev = d.severity;
+      const col = SEV_COLORS[sev||0];
+      return '<div class="obs-block">'+
+        '<div class="obs-label" style="color:'+col+'">'+pb.emoji+' '+pb.name+(sev?' \u00b7 '+sev+'/5':'')+'</div>'+
+        '<div class="obs-text">\u201c'+d.note.trim()+'\u201d</div>'+
+      '</div>';
+    }).join('');
+    html.push('<div class="signal-card info"><div class="signal-title info">Field Observations</div><div class="signal-body">'+body+'</div></div>');
+  }
+
+  // ── 5. TREND COMPARISON (same location, previous records) ────────
+  const locKey = rec.location.trim().toLowerCase();
+  const sameLocOthers = records
+    .filter(r => r.id !== rec.id && r.location.trim().toLowerCase() === locKey && r.avgSev)
+    .sort((a,b)=>a.timestamp.localeCompare(b.timestamp));
+
+  if(sameLocOthers.length){
+    let body = '<b>'+sameLocOthers.length+' previous assessment'+(sameLocOthers.length>1?'s':'')+' </b> at '+rec.location+':';
+    body += '<div style="margin-top:10px">';
+    sameLocOthers.slice(-4).forEach(prev=>{
+      const diff = rec.avgSev - prev.avgSev;
+      const absDiff = Math.abs(diff).toFixed(1);
+      const chipClass = diff>0.2?'t-up':diff<-0.2?'t-dn':'t-eq';
+      const chipText = diff>0.2?'\u2191 +'+absDiff:diff<-0.2?'\u2193 \u2212'+absDiff:'\u2014 stable';
+      body += '<div class="trend-item">'+
+        '<div>'+
+          '<div class="trend-loc">'+prev.date+'</div>'+
+          '<div style="font-size:11px;color:var(--muted)">Score: '+prev.avgSev.toFixed(1)+'/5 \u00b7 '+prev.answered+'/9</div>'+
+        '</div>'+
+        '<div class="trend-chip '+chipClass+'">'+chipText+'</div>'+
+      '</div>';
+    });
+    // Per-boundary trend table for boundaries present in both
+    const sharedBoundaries = PB.filter(pb=>{
+      const curr = rec.boundaries[pb.id];
+      const any = sameLocOthers.some(r=>r.boundaries[pb.id]&&!r.boundaries[pb.id].skipped&&r.boundaries[pb.id].severity>0);
+      return curr&&!curr.skipped&&curr.severity>0&&any;
+    });
+    if(sharedBoundaries.length){
+      body += '<div style="margin-top:12px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Boundary trends vs last visit</div>';
+      const lastPrev = sameLocOthers[sameLocOthers.length-1];
+      sharedBoundaries.forEach(pb=>{
+        const curr = rec.boundaries[pb.id].severity;
+        const prev = lastPrev.boundaries[pb.id];
+        const prevSev = prev&&!prev.skipped?prev.severity:null;
+        if(prevSev===null) return;
+        const d = curr - prevSev;
+        const col = d>0?'#ef9a9a':d<0?'#c5e1a5':'var(--muted)';
+        const arrow = d>0?'\u2191':d<0?'\u2193':'\u2192';
+        body += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(120,180,80,.07)">'+
+          '<span style="font-size:14px">'+pb.emoji+'</span>'+
+          '<span style="font-size:12px;flex:1;color:var(--text)">'+pb.name+'</span>'+
+          '<span style="font-size:11px;color:var(--muted)">'+prevSev+' \u2192 '+curr+'</span>'+
+          '<span style="font-size:14px;font-weight:700;color:'+col+';min-width:14px;text-align:center">'+arrow+'</span>'+
+        '</div>';
+      });
+    }
+    body += '</div>';
+    html.push('<div class="signal-card info"><div class="signal-title info">Trend vs Previous Visits</div><div class="signal-body">'+body+'</div></div>');
+  }
+
+  // ── 6. WHAT TO FOLLOW UP ─────────────────────────────────────────
+  const topIssues = [...critical, ...high].slice(0,3);
+  if(topIssues.length){
+    const followUps = {
+      climate:   'Ask elders for specific glacier or snowfall dates from 10, 20, 30 years ago. Cross-reference with Tawang Monastery climate records if accessible.',
+      biosphere: 'Note exact elevations of any species sightings. Compare with forest department range maps. Check if sacred grove (shing-kham) boundaries have shifted.',
+      land:      'Photograph slope scars and road cuts with GPS. Note which authority authorised recent construction. Cross-check with district development plans.',
+      freshwater:'Mark spring and stream GPS coordinates. Ask when each water source last changed behaviour. Cross-reference with Irrigation dept seasonal flow data.',
+      nitrogen:  'Identify which crops are receiving fertiliser and from which supply chain. Note any algae discolouration in streams or standing water.',
+      novel:     'Photograph litter concentrations with GPS. Note any black carbon deposits at snow edges. Identify nearest diesel generator or vehicle traffic source.',
+      aerosol:   'Note wind direction and time of day for haze observations. Check if haze correlates with crop burning season across the border.',
+      ozone:     'Ask farmers about crop damage timing vs sun exposure. Note if protective behaviour (hats, covering skin) has increased.',
+      ocean:     'Record GPS of any lake colour change observation. Ask fishermen for fish species and catch quantity trends over 5 years.'
+    };
+    let body = 'Priority follow-up actions based on highest-severity findings:';
+    body += '<div style="margin-top:10px">';
+    topIssues.forEach(pb=>{
+      const d = rec.boundaries[pb.id];
+      const col = SEV_COLORS[d.severity];
+      body += '<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">'+
+        '<div style="font-size:13px;font-weight:700;color:'+col+';margin-bottom:4px">'+pb.emoji+' '+pb.name+'</div>'+
+        '<div style="font-size:13px;color:var(--text);line-height:1.6">'+followUps[pb.id]+'</div>'+
+      '</div>';
+    });
+    body += '</div>';
+    html.push('<div class="signal-card moderate"><div class="signal-title moderate">Follow-Up Actions</div><div class="signal-body">'+body+'</div></div>');
+  }
+
+  wrap.innerHTML = html.join('');
+}
+
+function drawRadar(rec){
+  const canvas=document.getElementById('radar-canvas');
+  const size=Math.min(window.innerWidth-32,300);
+  canvas.width=size;canvas.height=size;
+  const ctx=canvas.getContext('2d');
+  const cx=size/2,cy=size/2,r=size*0.38;
+  const n=9;
+  ctx.clearRect(0,0,size,size);
+
+  // Grid rings
+  for(let ring=1;ring<=5;ring++){
+    ctx.beginPath();
+    for(let i=0;i<n;i++){
+      const a=((i/n)*Math.PI*2)-Math.PI/2;
+      const rr=r*ring/5;
+      const x=cx+Math.cos(a)*rr,y=cy+Math.sin(a)*rr;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle='rgba(120,180,80,'+(ring===5?'.25':'.1')+')';
+    ctx.lineWidth=ring===5?1.5:1;
+    ctx.stroke();
+  }
+
+  // Spokes & labels
+  PB.forEach((pb,i)=>{
+    const a=((i/n)*Math.PI*2)-Math.PI/2;
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);
+    ctx.strokeStyle='rgba(120,180,80,.15)';ctx.lineWidth=1;ctx.stroke();
+    // Label
+    const la=1.13;
+    const lx=cx+Math.cos(a)*r*la,ly=cy+Math.sin(a)*r*la;
+    ctx.font='bold '+(size*0.033)+'px Trebuchet MS,Verdana,sans-serif';
+    ctx.fillStyle='rgba(200,230,150,.7)';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(pb.emoji,lx,ly);
+  });
+
+  // Data polygon
+  ctx.beginPath();
+  PB.forEach((pb,i)=>{
+    const d=rec.boundaries[pb.id];
+    const sev=d&&!d.skipped&&d.severity?d.severity:0;
+    const a=((i/n)*Math.PI*2)-Math.PI/2;
+    const rr=r*sev/5;
+    const x=cx+Math.cos(a)*rr,y=cy+Math.sin(a)*rr;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.closePath();
+  ctx.fillStyle='rgba(139,195,74,.18)';ctx.fill();
+  ctx.strokeStyle='rgba(139,195,74,.8)';ctx.lineWidth=2;ctx.stroke();
+
+  // Dots
+  PB.forEach((pb,i)=>{
+    const d=rec.boundaries[pb.id];
+    const sev=d&&!d.skipped&&d.severity?d.severity:0;
+    if(sev===0)return;
+    const a=((i/n)*Math.PI*2)-Math.PI/2;
+    const rr=r*sev/5;
+    ctx.beginPath();
+    ctx.arc(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr,4,0,Math.PI*2);
+    ctx.fillStyle=SEV_COLORS[sev];ctx.fill();
+  });
+}
+
+// ══ EDIT ═════════════════════════════════════════════════════════════
+function editRecord(id){
+  const rec=records.find(r=>r.id===id);if(!rec)return;
+  editingId=id;
+  buildAssessForm();
+  showScreen('assess');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    document.getElementById('f-location').value=rec.location||'';
+    PB.forEach(pb=>{
+      const d=rec.boundaries[pb.id];if(!d)return;
+      if(d.skipped){
+        const sk=document.getElementById('sk-'+pb.id);
+        if(sk&&!sk.classList.contains('skipped'))toggleSkip(pb.id);
+      }else{
+        if(d.severity){
+          const btn=document.getElementById('sv-'+pb.id+'-'+d.severity);
+          if(btn)setSev(btn);
+        }
+        const ta=document.getElementById('fn-'+pb.id);
+        if(ta)ta.value=d.note||'';
+      }
+    });
+    const savBtn=document.querySelector('.save-btn');
+    if(savBtn)savBtn.textContent='Update Assessment \u2192';
+  }));
+}
+
+// ══ HOME ═════════════════════════════════════════════════════════════
+function refreshHome(){
+  document.getElementById('s-total').textContent=records.length;
+  const avgs=records.filter(r=>r.avgSev).map(r=>r.avgSev);
+  document.getElementById('s-avg').textContent=avgs.length?(avgs.reduce((a,b)=>a+b,0)/avgs.length).toFixed(1):'\u2014';
+  document.getElementById('s-days').textContent=new Set(records.map(r=>r.date)).size;
+  const list=document.getElementById('recent-list');
+  if(!records.length){
+    list.innerHTML='<div class="empty"><div class="empty-icon">\ud83c\udfd4</div><p>No assessments yet.<br>Tap New Assessment to begin.</p></div>';
+    return;
+  }
+  list.innerHTML=records.slice(0,4).map(entryCardHTML).join('');
+}
+
+function entryCardHTML(r){
+  const col=r.avgSev>=4?'#ef9a9a':r.avgSev>=3?'#ffcc80':r.avgSev>=2?'#ffe082':'#c5e1a5';
+  return '<div class="recent-card" onclick="showResult(\''+r.id+'\')">'+
+    '<div class="rc-dot" style="background:'+col+'"></div>'+
+    '<div class="rc-info">'+
+      '<div class="rc-loc">'+r.location+'</div>'+
+      '<div class="rc-meta">'+r.date+' \u00b7 '+r.time+'</div>'+
+    '</div>'+
+    '<div class="rc-score" style="color:'+col+'">'+(r.avgSev?r.avgSev.toFixed(1)+'/5':'\u2014')+'</div>'+
+  '</div>';
+}
+
+// ══ ENTRIES ══════════════════════════════════════════════════════════
+function refreshEntries(){
+  document.getElementById('entries-count').textContent=records.length+' assessment'+(records.length!==1?'s':'');
+  const list=document.getElementById('entries-list');
+  if(!records.length){list.innerHTML='<div class="empty"><div class="empty-icon">\ud83d\udccb</div><p>No records yet.</p></div>';return;}
+  list.innerHTML=records.map(r=>{
+    const col=r.avgSev>=4?'#ef9a9a':r.avgSev>=3?'#ffcc80':r.avgSev>=2?'#ffe082':'#c5e1a5';
+    return '<div class="entry-card" onclick="showResult(\''+r.id+'\')">'+
+      '<div class="ec-row">'+
+        '<div class="ec-dot" style="background:'+col+'"></div>'+
+        '<div class="ec-loc">'+r.location+'</div>'+
+        '<div class="ec-score">'+(r.avgSev?r.avgSev.toFixed(1):'\u2014')+'/5</div>'+
+      '</div>'+
+      '<div class="ec-meta">'+r.date+' \u00b7 '+r.time+' \u00b7 '+r.answered+'/9 boundaries assessed</div>'+
+    '</div>';
+  }).join('');
+}
+
+// ══ EXPORT ═══════════════════════════════════════════════════════════
+function refreshExport(){
+  // pending count shown on export screen
+}
+
+function exportSelf(){
+  if(!records.length){toast('No data yet');return;}
+  const seedJson=JSON.stringify(records)
+    .replace(/</g,'\\u003C')
+    .replace(/>/g,'\\u003E');
+  function doExport(src){
+    const updated=src.replace(
+      /(<script[^>]+id="__PB_SEED__"[^>]*>)[^<]*(<\/script>)/,
+      '$1'+seedJson+'$2'
+    );
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([updated],{type:'text/html'}));
+    a.download='pb-tawang-'+new Date().toISOString().split('T')[0]+'.html';
+    a.click();
+    toast('Downloaded \u2713 \u2014 share this file');
+  }
+  fetch(location.href).then(r=>r.text()).then(doExport).catch(()=>doExport(document.documentElement.outerHTML));
+}
+
+function exportCSV(){
+  const cols=['id','date','time','location','avgSev','answered',...PB.map(p=>'sev_'+p.id),...PB.map(p=>'note_'+p.id)];
+  const esc=v=>v===null||v===undefined?'':typeof v==='string'?'"'+v.replace(/"/g,'""')+'"':v;
+  const rows=[cols.join(',')];
+  records.forEach(r=>{
+    rows.push(cols.map(c=>{
+      if(c.startsWith('sev_')){const pb=c.slice(4);return esc(r.boundaries[pb]&&!r.boundaries[pb].skipped?r.boundaries[pb].severity:'');}
+      if(c.startsWith('note_')){const pb=c.slice(5);return esc(r.boundaries[pb]?r.boundaries[pb].note:'');}
+      return esc(r[c]);
+    }).join(','));
+  });
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'}));
+  a.download='pb-tawang-'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click();toast('CSV downloaded \u2713');
+}
+
+function shareText(){
+  const lines=['\ud83c\udfd4 PB Field Assessment \u2014 Tawang','Generated: '+new Date().toLocaleDateString(),''];
+  records.slice(0,6).forEach(r=>{
+    lines.push('\ud83d\udccd '+r.location+' ('+r.date+')');
+    lines.push('  Score: '+(r.avgSev?r.avgSev.toFixed(1)+'/5':'\u2014')+' \u00b7 '+r.answered+'/9 boundaries');
+    const highs=PB.filter(pb=>r.boundaries[pb.id]&&!r.boundaries[pb.id].skipped&&r.boundaries[pb.id].severity>=4);
+    if(highs.length)lines.push('  High severity: '+highs.map(p=>p.name).join(', '));
+    lines.push('');
+  });
+  const text=lines.join('\n');
+  if(navigator.share)navigator.share({title:'PB Assessment \u2014 Tawang',text}).catch(()=>{});
+  else if(navigator.clipboard)navigator.clipboard.writeText(text).then(()=>toast('Copied \u2713'));
+}
+
+function clearAll(){
+  confirm2('Delete ALL assessments? Export first!','Clear all',()=>{
+    confirm2('Are you absolutely sure?','Yes, delete all',()=>{
+      records=[];save();refreshHome();toast('All data cleared');
+    });
+  });
+}
+
+let deferredInstall=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;});
+function triggerInstall(){
+  if(deferredInstall){deferredInstall.prompt();deferredInstall.userChoice.then(()=>{deferredInstall=null;});}
+  else toast('Chrome: tap \u22ee \u2192 Add to Home Screen');
+}
+
+// ══ PWA ══════════════════════════════════════════════════════════════
+(function(){
+  try{
+    if('serviceWorker' in navigator){
+      const sw=[
+        'const V="pb-v1";',
+        'self.addEventListener("install",e=>{e.waitUntil(caches.open(V).then(c=>c.addAll([])));self.skipWaiting();});',
+        'self.addEventListener("activate",e=>{e.waitUntil(clients.claim());});',
+        'self.addEventListener("fetch",e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>new Response("",{status:503}))));});'
+      ].join('\n');
+      navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'})),{scope:'./'}).catch(()=>{});
+    }
+  }catch(e){}
+  try{
+    const c=document.createElement('canvas');c.width=c.height=192;
+    const x=c.getContext('2d');
+    const g=x.createRadialGradient(96,96,0,96,96,96);
+    g.addColorStop(0,'#2e5a1c');g.addColorStop(1,'#0f1a0f');
+    x.fillStyle=g;x.beginPath();x.roundRect(0,0,192,192,32);x.fill();
+    x.fillStyle='#8bc34a';x.font='bold 90px Verdana';x.textAlign='center';x.textBaseline='middle';
+    x.fillText('\ud83c\udf0d',96,96);
+    const icon=c.toDataURL();
+    const mf={name:'PB Field Assessment',short_name:'PB Assess',description:'Planetary Boundaries field assessment tool for Tawang Basin',start_url:'./',display:'standalone',background_color:'#0f1a0f',theme_color:'#1a2e1a',orientation:'portrait',icons:[{src:icon,sizes:'192x192',type:'image/png'}]};
+    const ml=document.getElementById('mf-link');
+    if(ml)ml.href=URL.createObjectURL(new Blob([JSON.stringify(mf)],{type:'application/manifest+json'}));
+  }catch(e){}
+})();
+
+// ══ BOOT ════════════════════════════════════════════════════════════
+load();
+refreshHome();
+</script>
+</body>
+</html>
